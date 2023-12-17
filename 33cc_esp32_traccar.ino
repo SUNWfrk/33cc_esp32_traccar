@@ -21,14 +21,6 @@ const char* resource = "/";
 // Traccar ID
 String id = SECRET_TRACCAR_ID;
 
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
-unsigned long lastTime = 0;
-// Timer set to 10 minutes (600000)
-//unsigned long timerDelay = 600000;
-// Set timer to 5 seconds (5000)
-unsigned long timerDelay = 5000;
-
 // NTP server to request epoch time
 const char* ntpServer = "be.pool.ntp.org";
 
@@ -49,6 +41,7 @@ unsigned long getTime() {
 
 TinyGsm modem(SerialAT);
 
+// Function to send GPS data to the server
 void send_data(float lat, float lon, float speed, float alt) {
   // Use WiFiClientSecure class to create a TLS connection
   WiFiClientSecure client;
@@ -99,7 +92,26 @@ void send_data(float lat, float lon, float speed, float alt) {
   delay(1000); // Wait for 1 seconds before making the next request
 }
 
-void gps_setup() {
+// Function to set up WiFi
+void setup_wifi() {
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+}
+
+// Function to set up time
+void setup_time() {
+  // Configuring time
+  configTime(0, 0, ntpServer);
+}
+
+// Function to set up the GPS module
+void setup_gps() {
     Serial.begin(115200); // Set console baud rate
     SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
 
@@ -161,20 +173,14 @@ void gps_setup() {
     modem.waitResponse(30000);
 }
 
+// Setup function
 void setup() {
-  gps_setup();
-
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-  configTime(0, 0, ntpServer);
+  setup_wifi();
+  setup_gps();
+  setup_time();
 }
 
+// Main loop
 void loop() {
   float lat, lon, speed, alt;
   while (1) {
