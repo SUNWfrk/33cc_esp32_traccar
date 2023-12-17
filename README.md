@@ -1,0 +1,5 @@
+12:52:06.428 -> PSRAM enable! PSRAM: 4.00 MB
+12:52:06.428 -> Falsh:16.00 MB
+12:52:06.428 -> Falsh speed:80 M
+12:52:06.428 -> Model:ESP32-D0WDQ5
+12:52:06.428 -> Chip Rev
