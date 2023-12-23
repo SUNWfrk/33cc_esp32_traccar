@@ -7,7 +7,7 @@
 #include "time.h"
 #include <TinyGsmClient.h>
 #include "utilities.h"
-#include "arduino_secrets.h" 
+#include "arduino_secrets.h"
 
 
 // WiFi config
@@ -21,11 +21,18 @@ const char* resource = "/";
 // Traccar ID
 String id = SECRET_TRACCAR_ID;
 
+// Accuracy seettings
+float degreemargin = 0.10;
+float accuracymargin = 4.00;
+// should be kept at the initial value of 0.00
+float previouslat = 0.00;
+float previouslon = 0.00;
+
 // NTP server to request epoch time
 const char* ntpServer = "be.pool.ntp.org";
 
 // Variable to save current epoch time
-unsigned long epochTime; 
+unsigned long epochTime;
 
 // Function that gets current epoch time
 unsigned long getTime() {
@@ -41,8 +48,68 @@ unsigned long getTime() {
 
 TinyGsm modem(SerialAT);
 
+// Function to validate coordinates and accuracy
+void verify_data(float lat, float lon, float speed, float alt, float accuracy) {
+  int sendit = 0;
+  Serial.print("Sendit value is set to: ");
+  Serial.println(sendit);
+  // check if we are still using the initial lat/lon previous values
+  if (( previouslat == 0.00f ) or ( previouslon == 0.00f )) {
+    Serial.println("Using initial GPS coordinates");
+    Serial.println("Checking Accuracy..");
+    Serial.print("Accuracy is: ");
+    Serial.println(accuracy);
+    if (accuracy <= accuracymargin) {
+      Serial.print("lat is: ");
+      Serial.println(lat,6);
+      Serial.print("lon is: ");
+      Serial.println(lon,6);
+      sendit = 1;
+      previouslat = lat;
+      previouslon = lon;
+      Serial.println("Accuracy OK");
+    } else {
+      Serial.println("Accuracy Not OK");
+    }
+  } else {
+    Serial.println("Not using initial GPS coordinates");
+    Serial.println("Checking Accuracy");
+    Serial.print("Accuracy is: ");
+    Serial.println(accuracy);
+    if (accuracy <= accuracymargin) {
+      float latmarginh = (previouslat + degreemargin);
+      float latmarginl = (previouslat - degreemargin);
+      float lonmarginh = (previouslon + degreemargin);
+      float lonmarginl = (previouslon - degreemargin);
+      Serial.print("lat is: ");
+      Serial.println(lat,6);
+      Serial.print("lat high margin is: ");
+      Serial.println(latmarginh,6);
+      Serial.print("lat low margin is: ");
+      Serial.println(latmarginl,6);
+      Serial.print("lon is: ");
+      Serial.println(lon,6);
+      Serial.print("lon high margin is: ");
+      Serial.println(lonmarginh,6);
+      Serial.print("lon low margin is: ");
+      Serial.println(lonmarginl,6);
+      if ((lat > latmarginl) && (lat < latmarginh) && (lon > lonmarginl) && (lon < lonmarginh)) {
+        Serial.println("Coordinates between margins");
+        sendit = 1;
+        previouslat = lat;
+        previouslon = lon;
+      }
+    }
+  }
+  if (sendit == 1) {
+    Serial.println("Sending data");
+    send_data(lat, lon, speed, alt, accuracy);
+  }
+}
+
 // Function to send GPS data to the server
-void send_data(float lat, float lon, float speed, float alt) {
+void send_data(float lat, float lon, float speed, float alt, float accuracy) {
+
   // Use WiFiClientSecure class to create a TLS connection
   WiFiClientSecure client;
   client.setInsecure();  // Set to use an insecure connection
@@ -182,10 +249,12 @@ void setup() {
 
 // Main loop
 void loop() {
-  float lat, lon, speed, alt;
+  float lat, lon, speed, alt, accuracy;
+  int vsat, usat;
   while (1) {
-    if (modem.getGPS(&lat, &lon, &speed, &alt)) {
-      send_data(lat, lon, speed, alt);
+    if (modem.getGPS(&lat, &lon, &speed, &alt, &vsat, &usat, &accuracy)) {
+      verify_data(lat, lon, speed, alt, accuracy);
+      // send_data(lat, lon, speed, alt, accuracy);
     }
     delay(5);
   }
