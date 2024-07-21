@@ -1,31 +1,47 @@
+There are a two steps before this works.
+
+1. update in `33cc_esp32_traccar.ino`
 
 ```
-19:42:19.067 -> Start modem...
-19:42:24.166 -> Try to start modem...
-19:42:29.559 -> Try to start modem...
-19:42:34.945 -> Try to start modem...
-19:42:36.482 -> Modem Response Started.
-19:42:37.720 -> Connecting to WiFi...
-19:42:38.259 -> E (22273) wifi:Association refused temporarily, comeback time 1022 mSec
-19:42:38.724 -> Connecting to WiFi...
-19:42:39.730 -> Connecting to WiFi...
-19:42:40.725 -> Connecting to WiFi...
-19:42:41.740 -> Connecting to WiFi...
-19:42:42.734 -> Connecting to WiFi...
-19:42:43.733 -> Connecting to WiFi...
-19:42:44.728 -> Connecting to WiFi...
-19:42:44.728 -> Connected to WiFi network with IP Address: 10.xx.xx.103
-19:43:25.203 -> Connecting to the.url-to-your-traccar.com
-19:43:26.546 -> Sending POST request...
-19:43:26.584 -> Headers received
-19:43:26.584 -> Response:
-19:43:26.584 -> ⸮
-19:43:26.584 -> Closing connection
-19:43:31.612 -> Connecting to the.url-to-your-traccar.com
-19:43:32.943 -> Sending POST request...
-19:43:32.979 -> Headers received
-19:43:32.979 -> Response:
-19:43:32.979 -> ⸮
-19:43:32.979 -> Closing connection
+#define USE_WIFI false
+#define USE_GPRS true
+```
+to either use WIFI or GPRS
 
+
+2. Copy `arduino_secrets.example` to `arduino_secrets.h` and update the file to your needs
+
+Compile and upload this to your device, I'm using a `T-SIM7600E/G-H`
+
+Example Serial log:
+
+```
+Starting modem... OK
+Starting GPS module.... OK
+Waiting for GPS Data for time config................... OK
+Entering SIM PIN
+Connecting to internet.provider.com. OK
+Sendit value is set to: 0
+Using initial GPS coordinates
+Checking Accuracy..
+Accuracy is: 1.70
+lat is: 55.xxxxxx
+lon is: 15.xxxxxx
+Accuracy OK
+Sending data
+making POST request
+Status code: 200
+Sendit value is set to: 0
+Checking Accuracy
+Accuracy is: 1.20
+lat is: 55.xxxxxx
+lat high margin is: 55.xxxxxx
+lat low margin is: 55.xxxxxx
+lon is: 15.xxxxxx
+lon high margin is: 15.xxxxxx
+lon low margin is: 14.xxxxxx
+Coordinates are between margins
+Sending data
+making POST request
+Status code: 200
 ```
